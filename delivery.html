@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+</head>
+
+<body>
+  <script type="importmap">
+    {
+      "imports": {
+        "vue": "https://cdn.jsdelivr.net/npm/vue@3.2/dist/vue.esm-browser.prod.js"
+      }
+    }
+  </script>
+
+  <style>
+    .disable {
+      opacity: .5;
+      background-color: #c0c0c0;
+      border: 1px solid #808080;
+      border-radius: 5px;
+    }
+
+    .enable {
+      background-color: #80ffff;
+      border: 1px solid #202020;
+      border-radius: 5px;
+    }
+
+    .delivered {
+      opacity: .5;
+    }
+
+    .radiobtn {
+      border: 1px solid #6c757d;
+    }
+
+    .nav-panel {
+      backdrop-filter: blur(20px);
+      background-color: rgba(255, 255, 255, 0.8);
+    }
+  </style>
+
+  <div id="app" class="container">
+    <img src="https://cdn-ak.f.st-hatena.com/images/fotolife/s/sumomo7743/20240501/20240501154739.png"
+      style="position: fixed; bottom: 0; right: 0; width: 30%; z-index: -1; max-width: 120px;">
+
+    <nav class="sticky-top  bg-body-tertiary nav-panel">
+      <div class="container">
+        <div class="d-flex align-items-center mb-1">
+          <h2 class="text-nowrap me-2 mb-0">ひのまつり</h2>
+          <div class="d-flex flex-column me-auto me-2">
+            <div class="text-nowrap" style="font-size: 0.5rem;">商品提供</div>
+            <div class="text-nowrap">{{item_name}}</div>
+          </div>
+          <a class="btn btn-secondary btn-sm" href="<?= getAppUrl() ?>">トップ</a>
+        </div>
+
+        <div class="d-flex">
+          <div class="flex-fill mb-3">
+            <input type="search" class="form-control" id="search" name="search" placeholder="ひらがな姓で絞り込み"
+              v-model="keyword" @keydown.enter="keyDown">
+          </div>
+          <div class="mb-3">
+            <button type="submit" class="btn btn-primary" :disabled="inprogress" @click="getMemberList()">
+              <span v-show="isLoading">
+                <span class="spinner-border spinner-border-sm" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </span>
+              </span>
+              実行
+            </button>
+          </div>
+        </div>
+
+        <div class="d-flex flex-wrap align-items-center mb-2">
+          <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+            <input type="radio" class="btn-check btn-sm" name="btnradio" id="btnradio1" autocomplete="off" value="0"
+              v-model="paymentFilter">
+            <label class="btn btn-outline-secondary btn-sm" for="btnradio1">受取り待ち</label>
+
+            <input type="radio" class="btn-check btn-sm" name="btnradio" id="btnradio2" autocomplete="off" value="1"
+              v-model="paymentFilter">
+            <label class="btn btn-outline-secondary btn-sm" for="btnradio2">受取り済み</label>
+
+            <input type="radio" class="btn-check btn-sm" name="btnradio" id="btnradio3" autocomplete="off" value="2"
+              v-model="paymentFilter">
+            <label class="btn btn-outline-secondary btn-sm" for="btnradio3">全員</label>
+
+            <input type="radio" class="btn-check btn-sm" name="btnradio" id="btnradio4" autocomplete="off" value="3"
+              v-model="paymentFilter">
+            <label class="btn btn-outline-secondary btn-sm" for="btnradio4">ボランティア</label>
+
+          </div>
+        </div>
+
+        <div class="d-flex flex-wrap mb-2">
+          <div class="btn-group mb-1" role="group" aria-label="Basic checkbox toggle button group">
+            <input type="checkbox" class="btn-check" id="btncheck1" autocomplete="off" v-model="gladeFilter[1]">
+            <label class="btn radiobtn btn-sm" :class="{'btn-outline-secondary': gladeFilter[1]}"
+              for="btncheck1">1年</label>
+
+            <input type="checkbox" class="btn-check" id="btncheck2" autocomplete="off" v-model="gladeFilter[2]">
+            <label class="btn radiobtn btn-sm" :class="{'btn-outline-secondary': gladeFilter[2]}"
+              for="btncheck2">2年</label>
+
+            <input type="checkbox" class="btn-check" id="btncheck3" autocomplete="off" v-model="gladeFilter[3]">
+            <label class="btn radiobtn btn-sm" :class="{'btn-outline-secondary': gladeFilter[3]}"
+              for="btncheck3">3年</label>
+
+            <input type="checkbox" class="btn-check" id="btncheck4" autocomplete="off" v-model="gladeFilter[4]">
+            <label class="btn radiobtn btn-sm" :class="{'btn-outline-secondary': gladeFilter[4]}"
+              for="btncheck4">4年</label>
+
+            <input type="checkbox" class="btn-check" id="btncheck5" autocomplete="off" v-model="gladeFilter[5]">
+            <label class="btn radiobtn btn-sm" :class="{'btn-outline-secondary': gladeFilter[5]}"
+              for="btncheck5">5年</label>
+
+            <input type="checkbox" class="btn-check" id="btncheck6" autocomplete="off" v-model="gladeFilter[6]">
+            <label class="btn radiobtn btn-sm" :class="{'btn-outline-secondary': gladeFilter[6]}"
+              for="btncheck6">6年</label>
+
+            <input type="checkbox" class="btn-check" id="btncheck7" autocomplete="off" v-model="gladeFilter[7]">
+            <label class="btn radiobtn btn-sm" :class="{'btn-outline-secondary': gladeFilter[7]}"
+              for="btncheck7">7年</label>
+
+            <input type="checkbox" class="btn-check" id="btncheck8" autocomplete="off" v-model="gladeFilter[8]">
+            <label class="btn radiobtn btn-sm" :class="{'btn-outline-secondary': gladeFilter[8]}"
+              for="btncheck8">8年</label>
+
+            <input type="checkbox" class="btn-check" id="btncheck9" autocomplete="off" v-model="gladeFilter[9]">
+            <label class="btn radiobtn btn-sm" :class="{'btn-outline-secondary': gladeFilter[9]}"
+              for="btncheck9">9年</label>
+
+            <input type="checkbox" class="btn-check" id="btncheck0" autocomplete="off" v-model="gladeFilter[0]">
+            <label class="btn radiobtn btn-sm" :class="{'btn-outline-secondary': gladeFilter[0]}"
+              for="btncheck0">先生</label>
+          </div>
+
+          <div>
+            <button class="btn btn-outline-secondary btn-sm" @click.prevent.stop="toggleGladeFilter">反転</button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+
+
+    <!-- 申込者一覧 -->
+    <div v-for="member in filteredMembers" v-key="member.id">
+      <member-panel :url="url" :qr="qr" :member="member" :col_name="col_name" :item_img="item_img" :item_name="item"
+        :inprogress="inprogress" :key="member.id" @update="update" @inprogress="e => inprogress=e"></member-panel>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { createApp } from 'vue';
+
+    const app = createApp({
+      data() {
+        return {
+          url: '<?= getAppUrl() ?>',
+          item: '<?= item ?>',
+          keyword: '',
+          gladeFilter: [true, true, true, true, true, true, true, true, true, true],
+          members: [],
+          qr: {},
+          qr_loading: true,
+          paymentFilter: 0,
+          isLoading: false,
+          inprogress: true,
+        };
+      },
+      computed: {
+        item_img() {
+          if (this.qr_loading) {
+            return "";
+          } else {
+            return this.qr[this.item];
+          }
+        },
+        item_name() {
+          if (this.item == 'hinodog') {
+            return "ひのドッグ";
+          } else if (this.item == 'yakisoba') {
+            return "やきそば";
+          } else if (this.item == 'onigiri') {
+            return "紅白おむすびセット";
+          } else if (this.item == 'okashi') {
+            return "お菓子セット";
+          } else if (this.item == 'all') {
+            return "スーパーモード";
+          }
+        },
+        col_name() {
+          if (this.item == 'hinodog') {
+            return "商品引渡_ひのドッグ";
+          } else if (this.item == 'yakisoba') {
+            return "商品引渡_やきそば";
+          } else if (this.item == 'onigiri') {
+            return "商品引渡_おむすび";
+          } else if (this.item == 'okashi') {
+            return "商品引渡_お菓子";
+          }
+        },
+        col_name2() {
+          if (this.item == 'hinodog') {
+            return "食券①ひのドッグ";
+          } else if (this.item == 'yakisoba') {
+            return "食券②やきそば";
+          } else if (this.item == 'onigiri') {
+            return "食券③紅白おむすびセット";
+          } else if (this.item == 'okashi') {
+            return "食券④お菓子セット";
+          }
+        },
+        filteredMembers() {
+          console.log('filteredMember start');
+          let retval;
+          if (this.paymentFilter == 0) {
+            retval = this.members.filter((val) => {
+              const ret1 = this.gladeCheck(val);
+              const ret2 = this.needToDelivery(val, true);
+              return ret1 && ret2;
+            })
+          }
+          if (this.paymentFilter == 1) {
+            retval = this.members.filter((val) => {
+              const ret1 = this.gladeCheck(val);
+              const ret2 = this.needToDelivery(val, false);
+              return ret1 && ret2;
+            })
+          }
+          if (this.paymentFilter == 2) {
+            retval = this.members.filter((val) => {
+              return this.gladeCheck(val);
+            })
+          }
+          if (this.paymentFilter == 3) {
+            retval = this.members.filter((val) => {
+              let ret = this.gladeCheck(val);
+              return ret && val['生徒ボランティア'] == true;
+            })
+          }
+          console.log('filteredMember end');
+          return retval;
+        },
+
+      },
+      mounted() {
+        this.getQr();
+        this.getMemberList();
+      },
+      methods: {
+        toggleGladeFilter() {
+          for (let i = 0; i < this.gladeFilter.length; i++) {
+            this.gladeFilter[i] = !this.gladeFilter[i];
+          }
+        },
+        gladeCheck(member) {
+          let ret = false;
+          let glade = member["年"];
+          return this.gladeFilter[glade];
+        },
+        needToDelivery(member, flg) {
+          // flg: true: 受取待ち確認, false: 受取済み確認
+          // どれかひとつでも提供待ちならtrue
+          const b_hinodog = member["食券①ひのドッグ"] ? 1 : 0;
+          const b_yakisoba = member["食券②やきそば"] ? 1 : 0;
+          const b_onigiri = member["食券③紅白おむすびセット"] ? 1 : 0;
+          const b_okashi = member["食券④お菓子セット"] ? 1 : 0;
+
+          const d_hinodog = member["商品引渡_ひのドッグ"] ? 1 : 0;
+          const d_yakisoba = member["商品引渡_やきそば"] ? 1 : 0;
+          const d_onigiri = member["商品引渡_おむすび"] ? 1 : 0;
+          const d_okashi = member["商品引渡_お菓子"] ? 1 : 0;
+          const check1 = b_hinodog + b_yakisoba + b_onigiri + b_okashi; // 注文確認
+          const check2 = (b_hinodog - d_hinodog) + (b_yakisoba - d_yakisoba) + (b_onigiri - d_onigiri) + (b_okashi - d_okashi); // 注文に対して提供があるか？
+          if (check1 == 0) {
+            // 注文がない→常にfalse
+            return false;
+          } else {
+            // 注文がある→残数で判断
+            if (flg) {
+              // 受取待ち確認
+              return check2 > 0;
+            } else {
+              // 受取済み確認
+              return check2 == 0;
+            }
+          }
+        },
+        async getQr() {
+          this.qr_loading = true
+          const params = { page: "qr" };
+          const query = new URLSearchParams(params);
+          const url = `${this.url}?${query}`;
+          const options = {
+            "headers": { "Content-Type": "text/plain" }
+          }
+          try {
+            const res = await fetch(url, options);
+            if (res.ok) {
+              const j = await res.json();
+              const qr = j;
+              // console.log("qr", qr);
+              this.qr = qr;
+              this.qr_loading = false
+            }
+          } catch (error) {
+            console.error(error.message);
+          }
+        },
+        keyDown(e) {
+          if (e.keyCode == 13) {
+            this.getMemberList();
+          }
+        },
+        async getMemberList() {
+          console.log('getMemberList start');
+          this.inprogress = true;
+          this.isLoading = true;
+          let modeString = "getMemberList";
+          console.log('mode', modeString);
+          const params = { page: "api", f: modeString, keyword: this.keyword };
+          const query = new URLSearchParams(params);
+          const url = `${this.url}?${query}`;
+          // console.log("url", url);
+          const options = {
+            "headers": {
+              "Content-Type": "text/plain",
+            }
+          }
+          try {
+            const res = await fetch(url, options);
+            if (res.ok) {
+              const j = await res.json();
+              this.members = j;
+            } else {
+              throw new Error(`response status: ${res.status}`);
+            }
+          } catch (error) {
+            console.error(error.message);
+          }
+          this.isLoading = false;
+          this.inprogress = false;
+          console.log('getMemberList end');
+        },
+        update(e) {
+          this.members.some(val => {
+            if (val.id == e.id) {
+              val[e.col_name] = e.delivered;
+              console.log('update', val);
+              return true;
+            }
+          })
+        },
+      }
+    });
+
+    app.component(
+      'memberPanel', {
+      props: ['url', 'qr', 'member', 'inprogress', 'col_name', 'item_img', 'item_name'],
+      template: `
+          <div class="card" style="background-color: rgba(255,255,255,0.95);">
+            <div class="card-body">
+              <div class="d-flex align-items-center flex-wrap">
+                <div>{{member["年"]}}-{{member["組"]}}</div>
+                <div class="me-auto">
+                  <h5 class="card-title"><ruby>{{member["氏名"]}}<rt>{{member["かな"]}}</rt></ruby></h5>
+                </div>
+
+                <div v-show="member['食券①ひのドッグ'] && (item_name=='all' || item_name=='hinodog')" class="me-2">
+                  <img :src="qr.hinodog" height="32" width="32">
+                </div>
+                <div v-show="member['食券②やきそば'] && (item_name=='all' || item_name=='yakisoba')" class="me-2">
+                  <img :src="qr.yakisoba" height="32" width="32">
+                </div>
+                <div v-show="member['食券③紅白おむすびセット'] && (item_name=='all' || item_name=='onigiri')" class="me-2">
+                  <img :src="qr.onigiri" height="32" width="32">
+                </div>
+                <div v-show="member['食券④お菓子セット'] && (item_name=='all' || item_name=='okashi')" class="me-2">
+                  <img :src="qr.okashi" height="32" width="32">
+                </div>
+
+                <div class="ms-2">
+                  <a href="#" class="btn btn-primary" :class="{disabled: inprogress}" @click.prevent.default="deliver">
+                    <span v-show="attr.i_isDeliverLoading">
+                      <span class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                      </span>
+                    </span>
+                    <span v-show="!isDelivered">提供する</span>
+                    <span v-show="isDelivered">もどす</span>
+                  </a>
+                </div>
+              </div>
+              <div class="row text-center">
+                <div class="col p-1 m-1" :class="{disable: !attr.member.hinodog, enable: attr.member.hinodog, delivered: attr.member.delivered_1}">
+                <img :src="qr.hinodog" height="24" width="24"></div>
+                <div class="col p-1 m-1" :class="{disable: !attr.member.yakisoba, enable: attr.member.yakisoba, delivered: attr.member.delivered_2}">
+                <img :src="qr.yakisoba"  height="24" width="24"></div>
+                <div class="col p-1 m-1" :class="{disable: !attr.member.onigiri, enable: attr.member.onigiri, delivered: attr.member.delivered_3}">
+                <img :src="qr.onigiri"  height="24" width="24"></div>
+                <div class="col p-1 m-1" :class="{disable: !attr.member.okashi, enable: attr.member.okashi, delivered: attr.member.delivered_4}">
+                <img :src="qr.okashi"  height="24" width="24"></div>
+                <div class="col p-1 m-1" :class="{disable: !attr.member.volunteer, enable: attr.member.volunteer}">
+                <img :src="qr.volunteer"  height="24" width="24"></div>
+              </div>
+            </div>
+          </div>
+          `,
+      data() {
+        return {
+          isDelivered: false,
+          attr: {
+            i_isLoading: false,
+            i_isDeliverLoading: false,
+            member: {}
+          }
+        }
+      },
+      computed: {
+      },
+      mounted() {
+        // 未就学児	食券①ひのドッグ	食券②やきそば	食券③紅白おむすびセット	食券④お菓子セット	生徒ボランティア	集金
+        this.attr.member.id = this.member.id;
+        {
+          {/*  this.attr.member.glade = this.member["年"];
+        this.attr.member.class = this.member["組"];  */}
+        }
+        this.attr.member.kids = this.member["未就学児"];
+        this.attr.member.hinodog = this.member["食券①ひのドッグ"];
+        this.attr.member.yakisoba = this.member["食券②やきそば"];
+        this.attr.member.onigiri = this.member["食券③紅白おむすびセット"];
+        this.attr.member.okashi = this.member["食券④お菓子セット"];
+        this.attr.member.volunteer = this.member["生徒ボランティア"];
+        this.attr.member.payment = this.member["集金"];
+        this.attr.member.delivered_1 = this.member["商品引渡_ひのドッグ"];
+        this.attr.member.delivered_2 = this.member["商品引渡_やきそば"];
+        this.attr.member.delivered_3 = this.member["商品引渡_おむすび"];
+        this.attr.member.delivered_4 = this.member["商品引渡_お菓子"];
+        this.attr.member.col_name = this.col_name;
+        this.attr.member.delivered = this.member[this.col_name]
+        this.isDelivered = this.member[this.col_name];
+      },
+      methods: {
+        toLocaleString(val) {
+          return val.toLocaleString();
+        },
+        async deliver() {
+          this.attr.member.delivered = !this.attr.member.delivered;
+          this.attr.i_isDeliverLoading = true;
+          await this.update();
+        },
+        async update() {
+          // 未就学児	食券①ひのドッグ	食券②やきそば	食券③紅白おむすびセット	食券④お菓子セット	生徒ボランティア	集金
+          console.log('update start');
+          this.$emit('inprogress', true);
+          this.attr.i_isLoading = true;
+          const formData = new URLSearchParams();
+          formData.append("id", this.attr.member.id);
+          formData.append("isDeliverMode", true);
+          if (this.item_name == 'hinodog' || this.item_name == 'all'){
+            formData.append("食券①ひのドッグ", true);
+          }
+          formData.append("col_name", this.col_name);
+          formData.append("delivered", this.attr.member.delivered);
+          const url = `${this.url}`;
+          console.log("url", url);
+          const options = {
+            method: "POST",
+            // mode: "no-cors",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: formData
+          }
+          try {
+            const res = await fetch(url, options);
+            console.log("res", res);
+            if (!res.ok) {
+              throw new Error(`response status: ${res.status}`);
+            } else {
+              const j = await res.json();
+              console.log("res", j);
+            }
+          } catch (error) {
+            console.error(error.message);
+          }
+          this.attr.i_isLoading = false;
+          this.attr.i_isDeliverLoading = false;
+          this.$emit('update', this.attr.member);
+          this.$emit('inprogress', false);
+          console.log('update end');
+        },
+      }
+    }
+    );
+
+    app.mount('#app');
+  </script>
+
+</body>
+
+</html>
